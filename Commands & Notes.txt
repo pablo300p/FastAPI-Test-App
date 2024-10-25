@@ -58,11 +58,3 @@ git branch -M main
 git remote add origin https://github.com/pablo300p/test-fastapi.git
 git push -u origin main
 
-#SET APP IN AWS
-aws opsworks create-app \
-    --region us-east-2 \
-    --name fastapi1 \
-    --type other \
-    --app-source Type=git,Url=https://github.com/pablo300p/test-fastapi,Revision=version1
-=======
->>>>>>> refs/remotes/origin/main

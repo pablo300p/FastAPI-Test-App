@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     acces_token_expire_minutes: int # Access token expiration time in minutes
     
     # Config class allows customization of how the environment variables are loaded.
-    # 'env_file' specifies that the environment variables should be read from the .env file.
+    # 'env_file' specifies that the environment variables should be read from the .env file this is for local.
     class Config:
         env_file = ".env"
 
