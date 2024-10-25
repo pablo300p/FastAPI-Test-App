@@ -22,7 +22,7 @@ http://127.0.0.1:8000/redoc
 pip freeze
 
 #POSTGRESS DB SUPERUSER PASSWORD ALSO FOR pgadmin
-$Password1234p  Port: 5432
+$<password used>  Port: 5432
 
 #THIS LIBRARY HAS TO BE DOWNGRADED DUE TO A PACKAGE THAT NO LONGER EXIST
 pip install bcrypt==4.0.1
@@ -48,6 +48,7 @@ alembic revision --autogenerate -m "auto-vote"
 
 #COMMAND TO SEND REQUEST FROM WEB BROWSER
 fetch('http://localhost:8000/').then(res => res.json()).then(console.log)
+<<<<<<< HEAD
 
 #INITIALIZE GIT
 git init
@@ -63,3 +64,5 @@ aws opsworks create-app \
     --name fastapi1 \
     --type other \
     --app-source Type=git,Url=https://github.com/pablo300p/test-fastapi,Revision=version1
+=======
+>>>>>>> refs/remotes/origin/main

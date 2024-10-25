@@ -16,7 +16,7 @@ from pydantic_settings import BaseSettings
 app = FastAPI()  # Initializes the FastAPI application
 
 # List of origins allowed for CORS (Cross-Origin Resource Sharing)
-origins = ["https://www.google.com"]
+origins = ['*']
 
 # Adds CORS middleware to the FastAPI application
 app.add_middleware(
