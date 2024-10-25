@@ -48,3 +48,18 @@ alembic revision --autogenerate -m "auto-vote"
 
 #COMMAND TO SEND REQUEST FROM WEB BROWSER
 fetch('http://localhost:8000/').then(res => res.json()).then(console.log)
+
+#INITIALIZE GIT
+git init
+git add --all
+git commit -m "Initial Commit"
+git branch -M main
+git remote add origin https://github.com/pablo300p/test-fastapi.git
+git push -u origin main
+
+#SET APP IN AWS
+aws opsworks create-app \
+    --region us-east-2 \
+    --name fastapi1 \
+    --type other \
+    --app-source Type=git,Url=https://github.com/pablo300p/test-fastapi,Revision=version1
