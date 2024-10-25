@@ -22,7 +22,7 @@ http://127.0.0.1:8000/redoc
 pip freeze
 
 #POSTGRESS DB SUPERUSER PASSWORD ALSO FOR pgadmin
-$Password1234p  Port: 5432
+$<password used>  Port: 5432
 
 #THIS LIBRARY HAS TO BE DOWNGRADED DUE TO A PACKAGE THAT NO LONGER EXIST
 pip install bcrypt==4.0.1
