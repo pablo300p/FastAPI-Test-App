@@ -1,0 +1,62 @@
+#CREATE THE TABLE posts
+
+CREATE TABLE IF NOT EXISTS posts (
+  id SERIAL PRIMARY KEY,
+  title VARCHAR(50) NOT NULL,
+  content VARCHAR(200) NOT NULL,
+  published BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+#CREATE THE TABLE users
+
+CREATE TABLE IF NOT EXISTS users (
+  id SERIAL PRIMARY KEY,
+  email VARCHAR(50) NOT NULL,
+  password VARCHAR(50) NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+#CREATE THE TABLE votes
+
+CREATE TABLE IF NOT EXISTS votes (
+  post_id INTEGER,
+  user_id INTEGER,
+  PRIMARY KEY (post_id, user_id),
+  CONSTRAINT fk_posts_votes FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
+  CONSTRAINT fk_users_votes FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+
+
+#ADD A COLUMN TO THE POSTS TABLE TO REFERENCE THE ID FROM USER
+
+ALTER TABLE posts
+ADD COLUMN user_id INT,
+ADD CONSTRAINT fk_user
+FOREIGN KEY (user_id)
+REFERENCES users(id);
+
+#TRIGGER FUNCTION TO SET FIELD to 0 IF USER IS DELETED
+
+#Trigger for posts table:
+
+CREATE OR REPLACE FUNCTION set_user_id_null()
+RETURNS TRIGGER AS $$
+BEGIN
+  -- Update posts table, set user_id to 0 where it matches the deleted user's id
+  UPDATE posts
+  SET user_id = NULL
+  WHERE user_id = OLD.id;
+
+  RETURN OLD;
+END;
+$$ LANGUAGE plpgsql;
+
+
+#Trigger for users table:
+
+CREATE TRIGGER on_user_delete
+AFTER DELETE ON users
+FOR EACH ROW
+EXECUTE FUNCTION set_user_id_null();

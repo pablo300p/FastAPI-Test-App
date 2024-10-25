@@ -1,0 +1,9 @@
+*Open amazon CLI, run the command:
+
+aws configure
+
+-Enter access keys
+
+*Copy the objects form the bucket to your bucket, run the command:
+
+aws s3 sync s3://DOC-EXAMPLE-BUCKET-SOURCE s3://DOC-EXAMPLE-BUCKET-TARGET
