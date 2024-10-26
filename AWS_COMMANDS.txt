@@ -1,6 +1,7 @@
 #COMMAND TO CREATE THE CLOUDFORMATION STACK
-aws cloudformation create-stack --stack-name Fastapi --region us-east-2 \
+aws cloudformation create-stack --stack-name <your_stack_name> --region us-east-1 \
 --template-body file://fastapi_template.yaml \
---parameters ParameterKey=DBUsername,ParameterValue=your_username \
-             ParameterKey=DBPassword,ParameterValue=your_password \
-             ParameterKey=DBName,ParameterValue=fastapi
+--parameters ParameterKey=DBUsername,ParameterValue=<your_username> \
+             ParameterKey=DBPassword,ParameterValue=<your_password> \
+             ParameterKey=DBName,ParameterValue=<Db_name> \
+             ParameterKey=VpcId,ParameterValue=<your_vpn>

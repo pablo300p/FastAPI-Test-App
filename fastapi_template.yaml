@@ -22,11 +22,16 @@ Parameters:
     Default: fastapidb
     Description: PostgreSQL Database Name
 
+  VPCId:
+    Type: AWS::EC2::VPC::Id
+    Description: The VPC ID where resources will be created.
+
 Resources:
   FastApiInstanceSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Allow HTTP and RDS access
+      VpcId: !Ref VpcId
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: 80
@@ -43,33 +48,31 @@ Resources:
       InstanceType: !Ref InstanceType
       SecurityGroups: 
         - !Ref FastApiInstanceSecurityGroup
-      ImageId: ami-0c55b159cbfafe1f0  # Update with an Amazon Linux or Ubuntu AMI for us-east-2
-      KeyName: my-key-pair  # Replace with your EC2 KeyPair
+      ImageId: ami-0c808db6baea2d0ed  # Update with a valid Amazon Linux or Ubuntu AMI for us-east-2
+      KeyName: flask_key_pair  # Replace with your EC2 KeyPair
       UserData:
         Fn::Base64: |
           #!/bin/bash
           yum update -y
           yum install -y python3-pip
           pip3 install fastapi uvicorn psycopg2-binary
-          # Export environment variables
           export DATABASE_HOSTNAME=your-db-hostname
           export DATABASE_PORT=5432
           export DATABASE_PASSWORD=!Ref DBPassword
           export DATABASE_NAME=!Ref DBName
           export DATABASE_USERNAME=!Ref DBUsername
-          export SECRET_KEY=your-secret-key
+          export SECRET_KEY=09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7
           export ALGORITHM=HS256
-          export ACCESS_TOKEN_EXPIRE_MINUTES=30
-          # Clone your app repository and start FastAPI
+          export ACCESS_TOKEN_EXPIRE_MINUTES=60
           git clone https://github.com/pablo300p/test-fastapi
           cd fastapi-app
-          uvicorn main:app --host 0.0.0.0 --port 80
+          uvicorn --host 0.0.0.0 --port 80
 
   DatabaseSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Allow database access from EC2 instance
-      VpcId: !Ref "AWS::VpcId"
+      VpcId: !Ref VpcId
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: 5432
@@ -92,6 +95,7 @@ Resources:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Security group for ALB
+      VpcId: !Ref VPCId
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: 80
@@ -106,7 +110,8 @@ Resources:
       SecurityGroups:
         - !Ref ALBSecurityGroup
       Subnets:
-        - subnet-12345abc  # Update with your subnets
+        - subnet-0d28ac14239b7e7ab
+        - subnet-0c16720ab2eafc49f  # Update with your subnets
 
   ALBTargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
@@ -114,7 +119,7 @@ Resources:
       Name: FastApiTargetGroup
       Port: 80
       Protocol: HTTP
-      VpcId: !Ref "AWS::VpcId"
+      VpcId: !Ref VPCId
       TargetType: instance
       HealthCheckEnabled: true
       HealthCheckIntervalSeconds: 30
