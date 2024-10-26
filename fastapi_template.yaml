@@ -49,7 +49,7 @@ Resources:
       SecurityGroups: 
         - !Ref FastApiInstanceSecurityGroup
       ImageId: ami-0c808db6baea2d0ed  # Update with a valid Amazon Linux or Ubuntu AMI for us-east-2
-      KeyName: flask_key_pair  # Replace with your EC2 KeyPair
+      KeyName: fastapi-key-pair  # Replace with your EC2 KeyPair
       UserData:
         Fn::Base64: |
           #!/bin/bash
