@@ -22,7 +22,7 @@ Parameters:
     Default: fastapidb
     Description: PostgreSQL Database Name
 
-  VPCId:
+  VpcId:
     Type: AWS::EC2::VPC::Id
     Description: The VPC ID where resources will be created.
 
@@ -31,7 +31,7 @@ Resources:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Allow HTTP and RDS access
-      VpcId: !Ref VpcId
+      VpcId: !Ref VpcId  # Reference the parameter you created
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: 80
@@ -46,7 +46,7 @@ Resources:
     Type: AWS::EC2::Instance
     Properties:
       InstanceType: !Ref InstanceType
-      SecurityGroups: 
+      SecurityGroups:
         - !Ref FastApiInstanceSecurityGroup
       ImageId: ami-0c808db6baea2d0ed  # Update with a valid Amazon Linux or Ubuntu AMI for us-east-2
       KeyName: fastapi-key-pair  # Replace with your EC2 KeyPair
@@ -72,7 +72,7 @@ Resources:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Allow database access from EC2 instance
-      VpcId: !Ref VpcId
+      VpcId: !Ref VpcId  # Reference the parameter you created
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: 5432
@@ -95,7 +95,7 @@ Resources:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Security group for ALB
-      VpcId: !Ref VPCId
+      VpcId: !Ref VpcId  # Reference the parameter you created
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: 80
@@ -104,7 +104,9 @@ Resources:
 
   ApplicationLoadBalancer:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+
     Properties:
+
       Name: FastApiLoadBalancer
       Scheme: internet-facing
       SecurityGroups:
@@ -119,23 +121,4 @@ Resources:
       Name: FastApiTargetGroup
       Port: 80
       Protocol: HTTP
-      VpcId: !Ref VPCId
-      TargetType: instance
-      HealthCheckEnabled: true
-      HealthCheckIntervalSeconds: 30
-      HealthCheckPath: /
-
-  ALBListener:
-    Type: AWS::ElasticLoadBalancingV2::Listener
-    Properties:
-      LoadBalancerArn: !Ref ApplicationLoadBalancer
-      Protocol: HTTP
-      Port: 80
-      DefaultActions:
-        - Type: forward
-          TargetGroupArn: !Ref ALBTargetGroup
-
-Outputs:
-  FastApiEC2PublicIP:
-    Description: Public IP of FastAPI EC2 instance
-    Value: !GetAtt FastApiInstance.PublicIp
+      VpcId: !Ref VpcId  # Reference the parameter you created
