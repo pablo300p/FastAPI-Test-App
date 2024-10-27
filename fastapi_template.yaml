@@ -48,25 +48,32 @@ Resources:
       InstanceType: !Ref InstanceType
       SecurityGroups:
         - FastApi-ALBSecurityGroup
-      ImageId: ami-0324a83b82023f0b3  # Update with a valid Amazon Linux or Ubuntu AMI for us-east-2
+      ImageId: ami-0ddc798b3f1a5117e  # Update with a valid Amazon Linux or Ubuntu AMI for us-east-1
       KeyName: fastapi-key-pair  # Replace with your EC2 KeyPair
-      UserData:
-        Fn::Base64: |
-          #!/bin/bash
-          yum update -y
-          yum install -y python3-pip
-          pip3 install fastapi uvicorn psycopg2-binary
-          export DATABASE_HOSTNAME=your-db-hostname
-          export DATABASE_PORT=5432
-          export DATABASE_PASSWORD=!Ref DBPassword
-          export DATABASE_NAME=!Ref DBName
-          export DATABASE_USERNAME=!Ref DBUsername
-          export SECRET_KEY=09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7
-          export ALGORITHM=HS256
-          export ACCESS_TOKEN_EXPIRE_MINUTES=60
-          git clone https://github.com/pablo300p/test-fastapi
-          cd fastapi-app
-          uvicorn --host 0.0.0.0 --port 80
+      UserData: 
+        Fn::Base64: 
+          Fn::Sub: |
+            #!/bin/bash
+            yum update -y
+            yum install -y python3-pip git
+            pip3 install fastapi uvicorn psycopg2-binary
+
+            # Setting environment variables
+            export DATABASE_HOSTNAME=your-db-hostname
+            export DATABASE_PORT=5432
+            export DATABASE_PASSWORD=${DBPassword}
+            export DATABASE_NAME=${DBName}
+            export DATABASE_USERNAME=${DBUsername}
+            export SECRET_KEY=09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7
+            export ALGORITHM=HS256
+            export ACCESS_TOKEN_EXPIRE_MINUTES=60
+
+            # Clone the repository and navigate to app folder
+            git clone https://github.com/pablo300p/test-fastapi
+            cd test-fastapi  # Adjust if necessary
+
+            # Start the FastAPI application using Uvicorn
+            uvicorn main:app --host 0.0.0.0 --port 80
 
   DatabaseSecurityGroup:
     Type: AWS::EC2::SecurityGroup
