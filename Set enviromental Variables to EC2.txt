@@ -1,0 +1,18 @@
+#OPEN PROFILE FILE
+vi ~/.profile
+
+#SET THE ENVIOMENTAL VARIABLES TO THE LINUX MACHINE
+export DATABASE_HOSTNAME= <your_ip>
+export DATABASE_PORT= 5432
+export DATABASE_PASSWORD= <your_password>
+export DATABASE_NAME= <your_db_name>
+export DATABASE_USERNAME= <your_username>
+export SECRET_KEY= <your_password>
+export ALGORITHM= HS256
+export ACCES_TOKEN_EXPIRE_MINUTES= 60
+
+#APPLY CHANGES
+source ~/.profile
+
+#VERIFY VARIABLES
+echo $DATABASE_HOSTNAME

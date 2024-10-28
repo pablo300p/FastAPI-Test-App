@@ -31,7 +31,7 @@ Resources:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Allow HTTP and RDS access
-      VpcId: !Ref VpcId  # Reference the parameter you created
+      VpcId: !Ref VpcId
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: 80
@@ -58,28 +58,11 @@ Resources:
             yum install -y python3-pip git
             pip3 install fastapi uvicorn psycopg2-binary
 
-            # Setting environment variables
-            export DATABASE_HOSTNAME=your-db-hostname
-            export DATABASE_PORT=5432
-            export DATABASE_PASSWORD=${DBPassword}
-            export DATABASE_NAME=${DBName}
-            export DATABASE_USERNAME=${DBUsername}
-            export SECRET_KEY=09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7
-            export ALGORITHM=HS256
-            export ACCESS_TOKEN_EXPIRE_MINUTES=60
-
-            # Clone the repository and navigate to app folder
-            git clone https://github.com/pablo300p/test-fastapi
-            cd test-fastapi  # Adjust if necessary
-
-            # Start the FastAPI application using Uvicorn
-            uvicorn main:app --host 0.0.0.0 --port 80
-
   DatabaseSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Allow database access from EC2 instance
-      VpcId: !Ref VpcId  # Reference the parameter you created
+      VpcId: !Ref VpcId
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: 5432
@@ -102,7 +85,7 @@ Resources:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Security group for ALB
-      VpcId: !Ref VpcId  # Reference the parameter you created
+      VpcId: !Ref VpcId
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: 80
@@ -111,9 +94,7 @@ Resources:
 
   ApplicationLoadBalancer:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
-
     Properties:
-
       Name: FastApiLoadBalancer
       Scheme: internet-facing
       SecurityGroups:
@@ -128,4 +109,4 @@ Resources:
       Name: FastApiTargetGroup
       Port: 80
       Protocol: HTTP
-      VpcId: !Ref VpcId  # Reference the parameter you created
+      VpcId: !Ref VpcId
