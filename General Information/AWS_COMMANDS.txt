@@ -4,4 +4,5 @@ aws cloudformation create-stack --stack-name <your_stack_name> --region us-east-
 --parameters ParameterKey=DBUsername,ParameterValue=<your_username> \
              ParameterKey=DBPassword,ParameterValue=<your_password> \
              ParameterKey=DBName,ParameterValue=<Db_name> \
-             ParameterKey=VpcId,ParameterValue=<your_vpn>
+             ParameterKey=VpcId,ParameterValue=<your_vpc> \
+             ParameterKey=InstanceType,ParameterValue=t2.micro
