@@ -58,3 +58,6 @@ git branch -M main
 git remote add origin https://github.com/pablo300p/test-fastapi.git
 git push -u origin main
 
+#INITIALIZE FOR PRODUCTION IN LINUX
+gunircon -w 4 -k uvicron.workers.UviconrWorker app.main:app --bind <host>:<port> 
+
