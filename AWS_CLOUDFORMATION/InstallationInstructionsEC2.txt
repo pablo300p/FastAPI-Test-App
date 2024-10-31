@@ -1,0 +1,32 @@
+#Connect to Your EC2 Instance:
+
+ssh -i your-key.pem ec2-user@your-instance-public-dns
+
+#Install Required Packages:
+sudo yum update -y
+sudo yum install -y git
+sudo amazon-linux-extras install -y python3.8
+
+#Clone Your Repository:
+git clone https://github.com/pablo300p/FastAPI-Test-App.git
+cd FastAPI-Test-App
+
+#Install FastAPI and Other Python Dependencies:
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+
+#Set Persistent Environment Variables:
+sudo nano ~/.bashrc
+
+export VARIABLE_NAME="value"
+
+-Save and close the file. Then apply the changes
+source ~/.bashrc
+
+#Start Your FastAPI Application
+uvicorn main:app --host 0.0.0.0 --port 8000
+
+
+
+

@@ -1,3 +1,6 @@
+#VALIDATE THE TEMPLATE
+aws cloudformation validate-template --template-body file://fastapi_template.yaml
+
 #COMMAND TO CREATE THE CLOUDFORMATION STACK
 aws cloudformation create-stack --stack-name <your_stack_name> --region us-east-1 \
 --template-body file://fastapi_template.yaml \

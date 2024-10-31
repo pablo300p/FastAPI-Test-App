@@ -1,43 +1,35 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from . import models
-from .database import engine
 from .routers import post, user, auth, vote
-from .config import settings
-from pydantic_settings import BaseSettings
+from .models import create_tables  # Import the function to create tables
 
-#print(settings.database_name)
+app = FastAPI()
 
-# CODE IS NOT NEEDED BECAUSE "alembic" manages the connection and creation of tables,
-# if Alembic is not used, this code is needed to connect and create database tables.
-# Uncomment the line below to connect to the database and create tables.
-# models.Base.metadata.create_all(bind=engine)
-
-app = FastAPI()  # Initializes the FastAPI application
-
-# List of origins allowed for CORS (Cross-Origin Resource Sharing)
-origins = ['*']
-
-# Adds CORS middleware to the FastAPI application
+# Configure CORS middleware
+origins = ["*"]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,  # Specifies allowed origins
-    allow_credentials=True,  # Allows cookies and authentication headers
-    allow_methods=["*"],  # Allows all HTTP methods (GET, POST, etc.)
-    allow_headers=["*"],  # Allows all headers in the request
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
-# Include routers to organize and handle different routes
-app.include_router(post.router)  # Routes for post-related operations
-app.include_router(user.router)  # Routes for user-related operations
-app.include_router(auth.router)  # Routes for authentication
-app.include_router(vote.router)  # Routes for voting-related operations
+# Register routers
+app.include_router(post.router)
+app.include_router(user.router)
+app.include_router(auth.router)
+app.include_router(vote.router)
 
-# Root route that returns a welcome message when the API's root endpoint is accessed
+# Create tables on startup
+@app.on_event("startup")
+def startup_event():
+    create_tables()  # Ensures tables are created if they don't exist
+
+# Root endpoint
 @app.get("/")
 def root():
-    return {"message": "Welcome to my API"}  # Response with a welcome message
-
+    return {"message": "Welcome to my API"}
 
 
 

@@ -1,84 +1,118 @@
-from fastapi import FastAPI, Response, status, HTTPException, Depends, APIRouter
-from sqlalchemy.orm import Session
-from .. import models, schemas, utils
-from ..database import get_db
+from fastapi import APIRouter, status, HTTPException
+from .. import schemas, utils, database
+from psycopg2.extras import RealDictCursor
 
-# Create a new router for handling user-related API endpoints.
-# This will automatically group endpoints under the '/users' path
-# and group them under the "Users" section in the API documentation.
+# Initialize router for handling user-related API endpoints
 router = APIRouter(
-    prefix="/users",          # Prefix all routes with '/users'
-    tags=['Users']            # Group documentation under "Users" category
+    prefix="/users",   # Prefix all routes with '/users'
+    tags=['Users']     # Group documentation under "Users" category
 )
 
 # Define a route to create a new user
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=schemas.UserOut)
-def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
+def create_user(user: schemas.UserCreate):
     """
-    Creates a new user in the system.
-
+    Create a new user.
+    
     Parameters:
-    - user: UserCreate schema containing user data like email and password.
-    - db: The database session used to query and save user information.
-
+    - user: schemas.UserCreate - The user data including email and password.
+    
     Returns:
-    - The created user as a response model.
+    - Newly created user data (id, email, created_at) if successful.
     """
-    
-    # Check if the user with the provided email already exists in the database
-    existing_user = db.query(models.User).filter(models.User.email == user.email).first()
-    
-    if existing_user:
-        # If the user exists, return a 409 Conflict error
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=f"User with email {user.email} already exists."
+    conn = None
+    try:
+        # Get a connection from the pool
+        conn = database.get_connection()
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+        
+        # Check if the user already exists
+        cursor.execute("SELECT id FROM users WHERE email = %s", (user.email,))
+        existing_user = cursor.fetchone()
+        if existing_user:
+            # Return a 409 Conflict error if user exists
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=f"User with email {user.email} already exists."
+            )
+
+        # Hash the password before storing it
+        hashed_password = utils.hash(user.password)
+        
+        # Insert new user data and fetch created_at
+        cursor.execute(
+            """
+            INSERT INTO users (email, password)
+            VALUES (%s, %s)
+            RETURNING id, email, created_at
+            """,
+            (user.email, hashed_password)
         )
+        new_user = cursor.fetchone()
+        
+        # Commit the transaction
+        conn.commit()
+        
+        # Return the newly created user, including `created_at`
+        return new_user
     
-    # Hash the user's password before storing it in the database
-    hashed_password = utils.hash(user.password)
-    user.password = hashed_password
-    
-    # Create a new user instance from the provided user data
-    new_user = models.User(**user.dict())
-    
-    # Add the new user to the database and commit the transaction
-    db.add(new_user)
-    db.commit()
-    
-    # Refresh the user instance to reflect the committed changes (such as generated ID)
-    db.refresh(new_user)
-    
-    # Return the newly created user
-    return new_user
-
-
-
-
+    except HTTPException as http_exc:
+        # Propagate HTTP exceptions (e.g., 409 conflict) for proper response
+        raise http_exc
+    except Exception as e:
+        # Handle unexpected errors as 500 errors
+        print(f"An error occurred: {e}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    finally:
+        # Ensure resources are properly released back to the pool
+        if conn:
+            cursor.close()
+            database.release_connection(conn)
 
 # Define a route to get a user by their ID
-@router.get('/{id}', response_model=schemas.UserOut)
-def get_user(id: int, db: Session = Depends(get_db)):
+@router.get("/{id}", response_model=schemas.UserOut)
+def get_user(id: int):
     """
-    Fetches a user by their ID.
-
+    Retrieve a user by their ID.
+    
     Parameters:
-    - id: The ID of the user to retrieve.
-    - db: The database session used to query the user.
-
+    - id: int - The unique identifier of the user.
+    
     Returns:
-    - The user with the specified ID if found, otherwise a 404 error.
+    - User data (id, email, created_at) if found.
     """
+    conn = None
+    try:
+        # Get a connection from the pool
+        conn = database.get_connection()
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+        
+        # Query the database for a user with the specified ID
+        cursor.execute("SELECT id, email, created_at FROM users WHERE id = %s", (id,))
+        user = cursor.fetchone()
+        
+        # If user does not exist, raise a 404 error
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"User with id: {id} does not exist."
+            )
+        
+        # Return the user if found
+        return user
     
-    # Query the database for a user with the specified ID
-    user = db.query(models.User).filter(models.User.id == id).first()
-    
-    # If the user does not exist, return a 404 Not Found error
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"User with id: {id} does not exist"
-        )
-    
-    # Return the user if found
-    return user
+    except HTTPException as http_exc:
+        # Propagate HTTP exceptions (e.g., 404 not found) for proper response
+        raise http_exc
+    except Exception as e:
+        # Handle unexpected errors as 500 errors
+        print(f"An unexpected error occurred: {e}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    finally:
+        # Ensure resources are properly released back to the pool
+        if conn:
+            cursor.close()
+            database.release_connection(conn)
+
+
+

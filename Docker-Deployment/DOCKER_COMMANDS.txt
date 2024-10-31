@@ -1,0 +1,33 @@
+#CREATE IMAGE
+docker build -t fastapi:v1 .
+
+#CHECK IF IMAGE GETS CREATED
+docker image ls
+
+#CREATE THE CONTAINER WITH THE APP AND THE DATABASE
+docker-compose up -d
+
+#KILL THE CONTAINER FROM COMPOSE IF NECCESARY
+docker-compose down
+
+#CHECK THE LOGS
+docker logs <container>
+
+#ENTER TO THE LINUX CONTAINER
+docker exec -it <container_name_or_id> /bin/bash
+
+#CHECK CONTAINERS RUNNING
+docker ps
+
+#CHECK CONTAINERS STOPPED
+docker ps -a
+
+#STOP CONTAINERS
+docker stop [OPTIONS] CONTAINER_ID_OR_NAME
+
+#RUN EXISTING CONTAINER
+docker start <container_id>
+
+
+
+

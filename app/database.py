@@ -1,52 +1,36 @@
-from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
-import psycopg2
+from psycopg2 import pool
 from psycopg2.extras import RealDictCursor
-import time
 from .config import settings
 
-# Define the connection string using environment variables from the config file
-# The format is: 'postgresql://username:password@hostname:port/dbname'
-SQLALCHEMY_DATABASE_URL = f'postgresql://{settings.database_username}:{settings.database_password}@{settings.database_hostname}:{settings.database_port}/{settings.database_name}'
+DATABASE_NAME = settings.database_name
+DATABASE_USER = settings.database_username
+DATABASE_PASSWORD = settings.database_password
+DATABASE_HOST = settings.database_hostname
+DATABASE_PORT = settings.database_port
 
-# Create the SQLAlchemy engine which manages the database connection pool
-# This is used to interact with the PostgreSQL database
-engine = create_engine(SQLALCHEMY_DATABASE_URL)
+# Configure connection pool
+pool = pool.SimpleConnectionPool(1, 10, 
+                                 user=DATABASE_USER,
+                                 password=DATABASE_PASSWORD,
+                                 host=DATABASE_HOST,
+                                 port=DATABASE_PORT,
+                                 database=DATABASE_NAME,
+                                 cursor_factory=RealDictCursor)
 
-# Configure a session factory using sessionmaker
-# This session factory is used to create new database sessions which manage transactions
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-# Create a base class for ORM models, which is used to define database tables
-Base = declarative_base()
-
-# Dependency for database sessions
-# This function yields a new database session, automatically closing it after use
-def get_db():
+def get_connection():
     """
-    Creates a new SQLAlchemy database session and ensures that it gets closed 
-    properly after the request is completed.
-    
-    Yields:
-    - db: An active database session.
+    Returns a connection from the connection pool.
     """
-    db = SessionLocal()
     try:
-        yield db
-    finally:
-        db.close()
+        return pool.getconn()
+    except Exception as e:
+        print(f"Error getting connection from pool: {e}")
+        raise
 
 
-
-# while True:
-#     try:
-#         conn = psycopg2.connect(host = 'localhost', database = 'fastapi', user = 'postgres', password = '$Password1234p', cursor_factory=RealDictCursor)
-#         cursor = conn.cursor()
-#         print("Databse connection was sucesfull!")
-#         break
-#     except Exception as error:
-#         print("Database connection failed!")
-#         print("Error: ", error)
-#         time.sleep(5)
-    
+def release_connection(conn):
+    """
+    Releases a connection back to the pool.
+    """
+    pool.putconn(conn)

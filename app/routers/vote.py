@@ -1,57 +1,85 @@
-from fastapi import FastAPI, Response, status, HTTPException, Depends, APIRouter
-from sqlalchemy.orm import Session
-from .. import models, schemas, utils, oauth2
-from ..database import get_db
+from fastapi import APIRouter, Depends, HTTPException, status
+from .. import schemas, oauth2
+from ..database import get_connection, release_connection
 
 # Create an APIRouter instance for vote-related operations
 router = APIRouter(
-    prefix="/vote",  # Prefix for all routes in this router
-    tags=['Vote']  # Tag to group routes in the FastAPI documentation
+    prefix="/vote",
+    tags=["Vote"]
 )
 
-# Define a POST endpoint to cast or remove a vote
 @router.post("/", status_code=status.HTTP_201_CREATED)
-def vote(vote: schemas.Vote, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
+def vote(
+    vote: schemas.Vote,
+    current_user: dict = Depends(oauth2.get_current_user)  # Get current user from OAuth2
+):
     """
-    Handle voting actions, either adding or deleting a vote on a post.
-    
-    Parameters:
-    - vote: schemas.Vote: The vote data (post ID and direction of vote).
-    - db: Session: The database session dependency.
-    - current_user: int: The ID of the currently authenticated user (from the OAuth2 token).
-    
+    Handle voting actions, either casting or removing a vote on a post.
+
+    Args:
+        vote (schemas.Vote): The vote action to perform.
+        current_user (dict): The authenticated user performing the action.
+
     Returns:
-    - JSON message confirming the action (add or delete vote).
+        dict: A message indicating the result of the voting action.
     """
-    
-    # Check if the post exists
-    post = db.query(models.Post).filter(models.Post.id == vote.post_id).first()
-    if not post:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Post with id: {vote.post_id} does not exist")
+    # Acquire a database connection
+    conn = get_connection()
+    try:
+        cursor = conn.cursor()
 
-    # Check if the user has already voted on the post
-    vote_query = db.query(models.Vote).filter(models.Vote.post_id == vote.post_id, models.Vote.user_id == current_user.id)
-    found_vote = vote_query.first()
+        # Check if the target post exists
+        cursor.execute("SELECT * FROM posts WHERE id = %s", (vote.post_id,))
+        post = cursor.fetchone()
+        if not post:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Post with id: {vote.post_id} does not exist"
+            )
 
-    # If vote direction is 1 (upvote)
-    if vote.dir == 1:
-        if found_vote:
-            # User already voted, raise a conflict error
-            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=f"User {current_user.id} already voted the post")
-        # Add a new vote to the database
-        new_vote = models.Vote(post_id=vote.post_id, user_id=current_user.id)
-        db.add(new_vote)
-        db.commit()
-        return {"Message": "Successfully added vote"}
+        # Extract user ID from the current_user dictionary
+        user_id = current_user["id"]
 
-    # If vote direction is 0 (downvote/remove)
-    else:
-        if not found_vote:
-            # Vote doesn't exist, raise a not found error
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Vote does not exist")
-        # Remove the vote from the database
-        vote_query.delete(synchronize_session=False)
-        db.commit()
-        return {"Message": "Vote successfully deleted"}
+        # Check if the user has already voted on the post
+        cursor.execute(
+            "SELECT * FROM votes WHERE post_id = %s AND user_id = %s",
+            (vote.post_id, user_id)
+        )
+        found_vote = cursor.fetchone()
 
-    
+        # Handle upvote action
+        if vote.dir == 1:
+            if found_vote:
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail=f"User {user_id} already voted on the post"
+                )
+
+            # Insert new vote into the database
+            cursor.execute(
+                "INSERT INTO votes (post_id, user_id) VALUES (%s, %s)",
+                (vote.post_id, user_id)
+            )
+            conn.commit()
+            return {"Message": "Successfully added vote"}
+
+        # Handle downvote (remove) action
+        else:
+            if not found_vote:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Vote does not exist"
+                )
+
+            # Remove the vote from the database
+            cursor.execute(
+                "DELETE FROM votes WHERE post_id = %s AND user_id = %s",
+                (vote.post_id, user_id)
+            )
+            conn.commit()
+            return {"Message": "Vote successfully deleted"}
+    finally:
+        # Ensure the connection is released back to the pool
+        release_connection(conn)
+
+
