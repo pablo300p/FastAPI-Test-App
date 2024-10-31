@@ -1,0 +1,37 @@
+version: "3"  
+
+services:
+  # Service for the FastAPI application
+  api:
+    build: .  # Builds the Docker image from the Dockerfile in the current directory.
+    depends_on:
+      - postgres  # Specifies that the 'api' service depends on the 'postgres' service, ensuring PostgreSQL starts first.
+    ports:
+      - "8000:8000"  # Maps port 8000 on the host to port 8000 in the container for accessing the FastAPI app.
+    volumes:
+      - ./:/usr/src/app:ro  # Mounts the current directory to /usr/src/app in the container as read-only.
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload  # Runs the FastAPI app with live reload on port 8000.
+    environment:
+      # Environment variables for the API application
+      - DATABASE_HOSTNAME=postgres  # Hostname for the PostgreSQL service.
+      - DATABASE_PORT=5432  # Port for connecting to PostgreSQL.
+      - DATABASE_PASSWORD=Password1234p  # Password for the PostgreSQL database.
+      - DATABASE_NAME=fastapi  # Database name.
+      - DATABASE_USERNAME=postgres  # Username for PostgreSQL.
+      - SECRET_KEY=09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7  # Secret key for JWT token generation.
+      - ALGORITHM=HS256  # Algorithm used for encoding JWT tokens.
+      - ACCESS_TOKEN_EXPIRE_MINUTES=60  # Expiration time for the access token in minutes.
+
+  # Service for PostgreSQL
+  postgres:
+    image: postgres  # Uses the official PostgreSQL image from Docker Hub.
+    environment:
+      # Environment variables for PostgreSQL
+      - POSTGRES_PASSWORD=Password1234p  # Sets the PostgreSQL password for the default user.
+      - POSTGRES_DB=fastapi  # Creates the 'fastapi' database at initialization.
+    volumes:
+      - mount:/var/lib/postgresql/data  # Persists PostgreSQL data using the 'mount' volume.
+
+# Volumes section for persisting data
+volumes:
+  mount:  # Defines the named volume 'mount' for persistent storage.

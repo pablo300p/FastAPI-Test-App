@@ -4,11 +4,11 @@ docker build -t fastapi:v1 .
 #CHECK IF IMAGE GETS CREATED
 docker image ls
 
-#CREATE THE CONTAINER WITH THE APP AND THE DATABASE
-docker-compose up -d
+#CREATE THE CONTAINER WITH THE APP AND THE DATABASE IN DETACHED MODE
+docker-compose -f docker-compose-dev.yml -up -d
 
 #KILL THE CONTAINER FROM COMPOSE IF NECCESARY
-docker-compose down
+docker-compose -f dcoker-compose-dev.yml down
 
 #CHECK THE LOGS
 docker logs <container>
@@ -28,6 +28,9 @@ docker stop [OPTIONS] CONTAINER_ID_OR_NAME
 #RUN EXISTING CONTAINER
 docker start <container_id>
 
-
+#PUSH MY IMAGE TO A REPOSITORY
+docker login
+docker image tag <current_image_name> pablo300p/<image_name>:tag
+docker push pablo300p/<image_name>
 
 
