@@ -18,9 +18,8 @@ def login(user_credentials: OAuth2PasswordRequestForm = Depends()):
     Returns:
     - JSON object with access token and token type.
     """
-    # Obtain a database connection from the pool
-    conn: Connection = database.get_connection()
     try:
+        conn = database.get_connection()
         cursor = conn.cursor()
         
         # Retrieve user data from the database using the email

@@ -61,3 +61,11 @@ git push -u origin main
 #INITIALIZE FOR PRODUCTION IN LINUX
 gunircon -w 4 -k uvicron.workers.UviconrWorker app.main:app --bind <host>:<port> 
 
+#PACKAGE FOR TESTING
+pip install pytest
+
+#COMMAND TO RUN TEST
+pytest -v
+
+pytest --disable-warnings
+

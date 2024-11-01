@@ -1,4 +1,4 @@
-from fastapi import APIRouter, status, HTTPException
+from fastapi import APIRouter, status, HTTPException, Depends
 from .. import schemas, utils, database
 from psycopg2.extras import RealDictCursor
 
@@ -9,7 +9,7 @@ router = APIRouter(
 )
 
 # Define a route to create a new user
-@router.post("/", status_code=status.HTTP_201_CREATED, response_model=schemas.UserOut)
+@router.post("/", status_code=status.HTTP_201_CREATED,response_model=schemas.UserOut)
 def create_user(user: schemas.UserCreate):
     """
     Create a new user.
@@ -20,7 +20,6 @@ def create_user(user: schemas.UserCreate):
     Returns:
     - Newly created user data (id, email, created_at) if successful.
     """
-    conn = None
     try:
         # Get a connection from the pool
         conn = database.get_connection()
